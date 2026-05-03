@@ -896,7 +896,7 @@ flowchart LR
     end
     
     subgraph TypeScript Mapped Type
-    C["{width: number, height: number}"] -->|[k in keyof] -> string| D["{width: string, height: string}"]
+    C["{width: number, height: number}"] -->|"`[k in keyof] -> string`"| D["{width: string, height: string}"]
     end
 ```
 
