@@ -401,8 +401,8 @@ Just like interfaces, we can generalize **Functions** using Generics. This allow
 ```mermaid
 flowchart TD
     A[Call Function] --> B{What type is passed?}
-    B -->|Passed a String| C[Creates string[]]
-    B -->|Passed a Number| D[Creates number[]]
+    B -->|Passed a String| C["Creates string[]"]
+    B -->|Passed a Number| D["Creates number[]"]
     
     C --> E[TypeScript locks array strictly to strings]
     D --> F[TypeScript locks array strictly to numbers]
@@ -563,7 +563,7 @@ When we combine `keyof` with Generics, we can create incredibly flexible and 100
 
 ```mermaid
 flowchart LR
-    A[Object Type:<br>{ car: string, bike: string }] -->|using 'keyof'| B[Union Type:<br>"car" | "bike"]
+    A["Object Type:<br>{ car: string, bike: string }"] -->|using 'keyof'| B["Union Type:<br>'car' | 'bike'"]
     B --> C[Variables can only hold exact key names!]
 ```
 
@@ -785,8 +785,8 @@ flowchart TD
     C -->|Keys| D[keyof typeof obj]
     C -->|Values| E[typeof obj bracket keyof typeof obj]
     
-    D --> F("Admin" | "Editor" | "Viewer")
-    E --> G("ADMIN" | "EDITOR" | "viewer")
+    D --> F["'Admin' | 'Editor' | 'Viewer'"]
+    E --> G["'ADMIN' | 'EDITOR' | 'viewer'"]
 ```
 
 ### Real World Example
@@ -892,11 +892,11 @@ By combining `Conditional Types` with `keyof`, your types become highly flexible
 ```mermaid
 flowchart LR
     subgraph JavaScript Array Map
-    A([1, 2, 3]) -->|map num -> string| B(["1", "2", "3"])
+    A(["[1, 2, 3]"]) -->|map num -> string| B(["['1', '2', '3']"])
     end
     
     subgraph TypeScript Mapped Type
-    C[{width: number, height: number}] -->|[k in keyof] -> string| D[{width: string, height: string}]
+    C["{width: number, height: number}"] -->|[k in keyof] -> string| D["{width: string, height: string}"]
     end
 ```
 
