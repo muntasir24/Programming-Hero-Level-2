@@ -50,9 +50,6 @@ flowchart TD
     Class[Class: Animal \n Blueprint] --> Obj1(Object 1: dog \n Name: Buddy \n Sound: Woof)
     Class --> Obj2(Object 2: cat \n Name: Whiskers \n Sound: Meow)
     
-    style Class fill:#f9f,stroke:#333,stroke-width:2px
-    style Obj1 fill:#bbf,stroke:#333,stroke-width:2px
-    style Obj2 fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
 ---
@@ -834,9 +831,6 @@ flowchart LR
     Outside -- Sends Object Data --> Setter["Setter Method \n set property(value)"]
     Setter -- Validates & Updates --> Private
     
-    style Private fill:#ff9999,stroke:#333,stroke-width:2px
-    style Getter fill:#99ff99,stroke:#333,stroke-width:2px
-    style Setter fill:#99ccff,stroke:#333,stroke-width:2px
 ```
 
 ### Step 1: Getters and Setters (`get` & `set`)
@@ -1483,7 +1477,6 @@ flowchart TD
     Contract -. Hides Complex Logic .-> Audio[AudioPlayer \n Decodes MP3, Accesses Speakers]
     Contract -. Hides Complex Logic .-> Video[VideoPlayer \n Decodes MP4, Renders Pixels]
     
-    style Contract fill:#f9f,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 ### Step 1: Abstraction via Interfaces
