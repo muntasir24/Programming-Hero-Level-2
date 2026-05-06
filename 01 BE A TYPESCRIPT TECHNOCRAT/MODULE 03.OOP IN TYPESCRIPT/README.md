@@ -829,9 +829,9 @@ class Grandchild extends Grandparent {
 ### 🎨 Visualizing Getters and Setters
 ```mermaid
 flowchart LR
-    Outside[Outside World] -- Requests Data --> Getter[Getter Method \n get property()]
+    Outside[Outside World] -- Requests Data --> Getter["Getter Method \n get property()"]
     Getter -- Returns Data --> Private[Private _property]
-    Outside -- Sends Object Data --> Setter[Setter Method \n set property(value)]
+    Outside -- Sends Object Data --> Setter["Setter Method \n set property(value)"]
     Setter -- Validates & Updates --> Private
     
     style Private fill:#ff9999,stroke:#333,stroke-width:2px
@@ -1291,10 +1291,10 @@ console.log(SimpleMath.add(10, 20)); // 30
 ### 🎨 Visualizing Polymorphism
 ```mermaid
 flowchart TD
-    Base[Base Class: Person \n getSleepHours()] --> S[Student \n getSleepHours() => 6]
-    Base --> T[Teacher \n getSleepHours() => 7]
+    Base["Base Class: Person \n getSleepHours()"] --> S["Student \n getSleepHours() => 6"]
+    Base --> T["Teacher \n getSleepHours() => 7"]
     
-    Func([Function: getSleepHoursForPerson(param: Person)]) -. Calls .-> S
+    Func(["Function: getSleepHoursForPerson(param: Person)"]) -. Calls .-> S
     Func -. Calls .-> T
 ```
 
@@ -1478,7 +1478,7 @@ class Lamp extends WallSocket {
 ### 🎨 Visualizing Abstraction
 ```mermaid
 flowchart TD
-    User[👤 You Press 'Play'] --> Contract{{Abstraction Layer \n Only shows 'play()' 'pause()'}}
+    User[👤 You Press 'Play'] --> Contract{{"Abstraction Layer \n Only shows 'play()' 'pause()'"}}
     
     Contract -. Hides Complex Logic .-> Audio[AudioPlayer \n Decodes MP3, Accesses Speakers]
     Contract -. Hides Complex Logic .-> Video[VideoPlayer \n Decodes MP4, Renders Pixels]
@@ -1650,9 +1650,9 @@ myHouse.installFrontDoor();
 flowchart TD
     subgraph Encapsulated Object
         direction TB
-        Public[Public Interface \n e.g. displayBalance()]
-        Private[🔒 Private Internal Data \n userId, userBalance]
-        Protected[🛡️ Protected Data \n Available to Subclasses]
+        Public["Public Interface \n e.g. displayBalance()"]
+        Private["🔒 Private Internal Data \n userId, userBalance"]
+        Protected["🛡️ Protected Data \n Available to Subclasses"]
         
         Public -- Safely Accesses --> Private
     end
