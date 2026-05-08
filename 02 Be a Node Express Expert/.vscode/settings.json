@@ -1,0 +1,4 @@
+{
+  "typescript.tsserver.enable": true,
+  "js/ts.validate.enabled": true
+}
