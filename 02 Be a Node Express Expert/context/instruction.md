@@ -30,7 +30,7 @@ You MUST provide a **"Problem Code"** block first showing the wrong, bad, messy,
 * You MUST provide an **"Analogy Code"** block written in clean TypeScript/JavaScript that models your real-life analogy. Explain the analogy clearly before showing its code.
 
 ## 3. FORMATTING & VISUALS
-* **Visuals First:** Use at least one conceptually relevant `Mermaid JS` diagram (flowchart, sequence, etc.) near the top to visually illustrate the core relationship between the concepts.
+* **Visuals First:** You MUST include a highly detailed and conceptually relevant `Mermaid JS` diagram (flowchart, sequence, state, etc.) for **EVERY SINGLE module or step**. Place the diagram right under the step heading so the reader can visually grasp the core concept before diving into the text.
 * **Emojis:** Generously use colorful and relevant emojis (🚀, 💡, ❌, ✅, 🛠️, 📌, etc.) in headings, lists, and key points to make the documentation engaging and prevent the reader from getting bored.
 * **Markdown:** Use extremely clean Markdown, semantic headings (H1, H2, H3), bold text for key terminologies, and properly syntax-highlighted code blocks.
 * **Language:** The final generated documentation must be entirely in beginner-friendly English.
