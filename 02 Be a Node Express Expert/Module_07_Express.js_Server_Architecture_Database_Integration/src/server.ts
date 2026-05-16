@@ -3,16 +3,18 @@ import express, {
   type Request,
   type Response,
 } from "express";
+import dotenv from "dotenv";
 import { Pool } from "pg";
 const app: Application = express();
-const port = 3000;
+dotenv.config();
+const port = process.env.PORT || 5000;
 
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 //when we send data to the server, we need to use the appropriate middleware to parse the incoming data. In this case, we are using express.json() to parse JSON data and express.urlencoded() to parse URL-encoded data. This allows us to access the data sent in the request body through req.body in our route handlers.
 const pool = new Pool({
   connectionString:
-    "postgresql://neondb_owner:npg_AQilhupO5NK0@ep-mute-unit-aprkfcgw-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require", // Sensitive data hidden!
+    process.env.DATABASE_URL, // Sensitive data hidden!
 });
 
 app.get("/", (req, res) => {
