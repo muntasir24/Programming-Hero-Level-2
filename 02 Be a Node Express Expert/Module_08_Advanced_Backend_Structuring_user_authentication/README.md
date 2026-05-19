@@ -459,3 +459,199 @@ class ChefService {
     }
 }
 ```
+
+---
+
+## Step 9: Error Handling in Service Layer (Throwing Errors vs HTTP Responses)
+
+### A. What it is
+In a modular architecture, the Service layer should never know about HTTP requests or responses (`req` or `res`). When an issue occurs (e.g., a user is not found), the Service simply **throws an Error**. It is the Controller's job to catch that error and send the appropriate HTTP status code (like 404) to the client.
+
+### B. The Problem (Coupling Service to HTTP)
+If we pass the `res` object into the Service just so we can send a `404` error, the Service becomes completely tied to the Express web framework. 
+*   **The Issue:** If we later want to reuse `createProfileintoDB` from a background task, Cron Job, or CLI tool where there is no HTTP `res` object, the application will crash.
+
+**Problem Code:**
+```typescript
+// ❌ Problem: Passing 'res' into the Service (Tightly Coupled)
+const createProfileintoDB = async(payload: any, res: Response) => {
+    // ... DB calls
+    if (user.rows.length === 0) {
+        // Service is doing Controller's job!
+        return res.status(404).json({ message: "User not found" }); 
+    }
+};
+```
+
+### C. The Solution (Throwing Errors)
+The Service should only throw a standard JavaScript Error. The Controller will catch this error in its `catch` block and formulate the proper HTTP Response. This keeps the Service pure, reusable, and framework-independent.
+
+**Solution Code:**
+```typescript
+// ✅ Solution: Exact code from profile.service.ts (Pure and Reusable)
+const createProfileintoDB = async(payload:any) => {
+    try {
+        const { user_id, bio, address,phone,gender } = payload;
+        const client = await pool.connect();
+        const user = await client.query(
+           `SELECT * FROM users WHERE id = $1`, [user_id]
+        );
+        
+        if (user.rows.length === 0) {
+            client.release();
+            // The Service ONLY throws the error. It doesn't know about HTTP!
+            throw new Error("User not found");
+        }
+        
+        // ... rest of the DB insertion code
+    } catch (error) {
+        console.error("Error creating profile in DB:", error);
+        throw error;
+    }
+};
+```
+
+### D. Real-Life Analogy
+💡 **The Cook and The Waiter:**
+*   **Problem:** If the Cook (Service) finds out there are no more tomatoes, they shouldn't run out of the kitchen and talk directly to the Customer (res.json). It's unprofessional and breaks the flow.
+*   **Solution:** The Cook should just yell "We are out of tomatoes!" (throw Error). The Waiter (Controller) hears this, walks to the Customer's table, and formally apologizes (HTTP 404 Response).
+
+**Analogy Code:**
+```typescript
+// ✅ Analogy Code: Cook throws error, Waiter handles the customer
+class CookService {
+    static cookFood(ingredient: string) {
+        if (ingredient === "none") {
+            // Cook just yells (throws error), doesn't talk to customer!
+            throw new Error("Ingredient not found"); 
+        }
+        return "Food is ready!";
+    }
+}
+
+class WaiterController {
+    static serveCustomer(res: any, ingredient: string) {
+        try {
+            const food = CookService.cookFood(ingredient);
+            res.status(200).send(food);
+        } catch (error: any) {
+            // Waiter formally handles the customer's response
+            res.status(404).json({ message: error.message });
+        }
+    }
+}
+```
+
+---
+
+## Step 10: JSON Web Token (JWT) & Authentication Process
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+
+    Client->>Server: 1. Send Login Payload (e.g. email, password)
+    Server->>Database: 2. Authenticate User credentials
+    Database-->>Server: 3. User Validated
+    Server->>Server: 4. Generate JWT using Secret Key
+    Server-->>Client: 5. Response with JWT
+    Note over Client,Server: For Future Requests...
+    Client->>Server: 6. Request protected API + sends JWT
+    Server->>Server: 7. Verify Signature (No DB checking needed!)
+    Server-->>Client: 8. Return requested Data
+```
+
+### A. What it is
+**JWT (JSON Web Token)** is an open standard used to securely share information between a client (Frontend) and a server (Backend) as a JSON object. It is mainly used for **Stateless Authentication**. 
+
+A JWT has **3 parts** (separated by dots `.`):
+1. **Header:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
+   * Decoded: `{ "alg": "HS256", "typ": "JWT" }`
+   * **Job:** Tells what algorithm is used to sign the token.
+2. **Payload:** `eyJpZCI6IjEyMzQ1Njc4OTAiLCJuYW1lIjoiTmV4dCBMZXZlbCJ9`
+   * Decoded: `{ "id": "123456", "name": "Next Level", "role": "admin" }`
+   * **Job:** Holds the actual user data. (Do not put passwords here, as anyone can decode it!).
+3. **Signature:** `KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30`
+   * Logic: `HMACSHA256( base64UrlEncode(header) + "." + base64UrlEncode(payload), secretKey )`
+   * **Job:** The unique stamp of the server. It verifies that the token wasn't changed by a hacker.
+
+### B. The Problem (Stateful Sessions)
+Before JWT, servers used **Sessions**. When a user logged in, the server created a Session ID and saved it in its own memory or database. 
+*   **The Issue:** The server has to *remember* every logged-in user. If you have 1 million users, the server's memory gets full. Also, if the server restarts, the memory clears, and everyone gets logged out!
+
+**Problem Code:**
+```typescript
+// ❌ Problem: The Server MUST remember the session in its memory
+const sessionMemory = {}; // Server's brain
+
+const loginUser = (userPayload) => {
+    // Check DB...
+    const sessionId = "random_string_123";
+    sessionMemory[sessionId] = userPayload.email; // Storing state!
+    return sessionId; // Sends to client
+};
+
+const accessDashboard = (sessionId) => {
+    // ❌ Server has to search its memory for every single request
+    if (!sessionMemory[sessionId]) throw new Error("Not logged in!");
+    return "Welcome to Dashboard";
+};
+```
+
+### C. The Solution (Stateless JWT)
+JWT solves this by being **Stateless**. The server doesn't remember anything! It simply takes the user's data (Payload), signs it with a `secretKey` to make a Token, and gives it to the user. Every time the user requests data, they show the Token. The server just checks if the signature is valid using its secret key. No memory, no database lookups!
+
+**Solution Code:**
+```typescript
+// ✅ Solution: Stateless JWT (Server remembers nothing!)
+import jwt from 'jsonwebtoken';
+
+const loginUser = async (payload) => {
+    // 1. Authenticate user from DB...
+    
+    // 2. Generate JWT (Server gives the user a signed token)
+    const token = jwt.sign(
+        { email: payload.email, role: 'admin' }, // Payload
+        'my_super_secret_key',                   // Signature Secret
+        { expiresIn: '1d' }                      // Expiration
+    );
+    return token; 
+};
+
+const accessDashboard = (token) => {
+    // ✅ Server just mathematically verifies the signature. No DB checking!
+    const decodedUser = jwt.verify(token, 'my_super_secret_key');
+    return `Welcome ${decodedUser.email} to Dashboard`;
+};
+```
+
+### D. Real-Life Analogy
+💡 **The VIP Club Bouncer:**
+*   **Problem (Session):** The Bouncer has a massive "Guest List Book" (Server Memory). Every time a guest wants to enter a room, the Bouncer has to flip through a 1000-page book to find their name. It's incredibly slow and exhausting.
+*   **Solution (JWT):** The Bouncer just gives validated guests a **Special Stamped Wristband** (JWT). Now, when a guest walks around, the Bouncer doesn't need to check any books; they just look at the wristband to see if it has the authentic "Club Stamp" (Signature).
+
+**Analogy Code:**
+```typescript
+// ❌ Problem: Searching the Big Book (Session)
+class BouncerWithBook {
+    checkEntry(guestName, hugeBook) {
+        if (!hugeBook.includes(guestName)) {
+            throw new Error("Wait, I have to read the whole book...");
+        }
+        return "Enter!";
+    }
+}
+
+// ✅ Solution: Checking the Stamp (JWT Signature)
+class SmartBouncer {
+    checkEntry(wristband) {
+        // Just checking the stamp. Fast and doesn't need a book!
+        if (wristband.stamp !== "OFFICIAL_CLUB_STAMP") {
+            throw new Error("Fake Wristband! Get out!");
+        }
+        return "Enter VIP Room!";
+    }
+}
+```
