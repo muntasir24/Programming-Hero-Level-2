@@ -4,12 +4,13 @@ import { userService } from "./user.service";
 const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
     const data = req.body;
-    const { name, email, password, age } = data;
+    const { name, email, password, age, role } = data;
     const result = await userService.creaateUserIntoDB({
       name,
       email,
       password,
       age,
+      role,
     });
 
     res.status(201).json({
@@ -36,6 +37,7 @@ const createUser = async (req: Request, res: Response): Promise<any> => {
 };
 
 const getAllUsers = async (req: Request, res: Response): Promise<any> => {
+  console.log(req.user);
   try {
     const result = await userService.getAllUsersFromDB();
     res.status(200).json({
@@ -53,7 +55,7 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
 
 const getUserById = async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id as string;
     const result = await userService.getUserByIdFromDB(userId);
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -75,9 +77,9 @@ const getUserById = async (req: Request, res: Response): Promise<any> => {
 };
 const updateUser = async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id as string;
     const { name, email, password, age } = req.body;
-   const result = await userService.updateUserIntoDB(userId, {
+    const result = await userService.updateUserIntoDB(userId, {
       name,
       email,
       password,
@@ -103,7 +105,7 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
 };
 const deleteUser = async (req: Request, res: Response): Promise<any> => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id as string;
     const result = await userService.deleteUserFromDB(userId);
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -124,11 +126,10 @@ const deleteUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-
 export const userController = {
   createUser,
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
 };

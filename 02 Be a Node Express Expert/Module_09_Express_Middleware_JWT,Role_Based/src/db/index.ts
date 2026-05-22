@@ -4,6 +4,11 @@ const pool = new Pool({
   connectionString: config.databaseUrl, // Sensitive data hidden!
 });
 
+// Catching idle client errors to prevent Node.js from crashing
+pool.on("error", (err, client) => {
+  console.error("Unexpected error on idle client", err);
+});
+
 const initDB = async () => {
   try {
     await pool.connect();
@@ -16,6 +21,7 @@ const initDB = async () => {
         password VARCHAR(255) NOT NULL,
         is_active BOOLEAN DEFAULT true,
         age INT,
+        role VARCHAR(20) DEFAULT 'user',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );

@@ -7,15 +7,17 @@ const createProfile = async (req: Request, res: Response) => {
         const result = await profileService.createProfileintoDB(req.body);
         res.status(201).json({ message: "Profile created successfully", profile: result });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating profile:", error);
-   if(error.code === "23505"){
-    res.status(400).json({ message: "Profile already exists for this user" });
-   } else if (error.message === "User not found") {
-    res.status(404).json({ message: "User not found" });
-   } else {
-    res.status(500).json({ message: "Internal server error" });
-   }
+    const code = error?.code;
+    const message = error?.message;
+    if (code === "23505") {
+      res.status(400).json({ message: "Profile already exists for this user" });
+    } else if (message === "User not found") {
+      res.status(404).json({ message: "User not found" });
+    } else {
+      res.status(500).json({ message: "Internal server error" });
+    }
   }
 };
 
