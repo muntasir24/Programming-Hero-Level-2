@@ -4,5 +4,6 @@ import path from "path";
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 export const config = {
-    port: Number(process.env.PORT),
+  port: Number(process.env.PORT),
+  db_url: process.env.DATABASE_URL,
 };
