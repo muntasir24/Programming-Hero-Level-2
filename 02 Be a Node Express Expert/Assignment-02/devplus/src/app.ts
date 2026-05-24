@@ -4,7 +4,8 @@ import express, {
   type Response,
 } from "express";
 import { errorHandler } from "./middleware/errorHandler";
-import { userRoute } from "./modules/auth/auth.route";
+import { authRoute } from "./modules/auth/auth.route";
+import cookieParser from "cookie-parser";
 
 const app: Application = express();
 
@@ -13,8 +14,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use(express.json()); //body parser to parse json
+app.use(cookieParser());
+app.use("/api/auth", authRoute);
 
-app.use("/api/auth", userRoute);
 
 app.use(errorHandler);
 

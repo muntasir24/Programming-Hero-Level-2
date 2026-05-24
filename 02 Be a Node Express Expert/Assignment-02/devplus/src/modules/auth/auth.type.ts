@@ -14,3 +14,14 @@ export interface UserRow {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface LoginBody {
+  email: string;
+  password: string;
+}
+
+export interface JwtPayload {
+  id: number;
+  name: string;
+  role: "contributor" | "maintainer";
+}
