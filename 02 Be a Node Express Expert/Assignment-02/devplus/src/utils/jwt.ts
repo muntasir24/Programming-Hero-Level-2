@@ -6,7 +6,7 @@ const Access_secret = config.access_secret as string;
 const Refresh_secret = config.refresh_secret as string;
 
 const generateAccessToken = (payload: JwtPayload): string => {
-  return jwt.sign(payload, Access_secret, { expiresIn: "15m" });
+  return jwt.sign(payload, Access_secret, { expiresIn: "10m" });
 };
 
  const generateRefreshToken = (payload: JwtPayload): string => {
