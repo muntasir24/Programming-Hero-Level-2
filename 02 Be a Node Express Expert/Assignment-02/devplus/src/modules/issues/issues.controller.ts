@@ -78,6 +78,15 @@ const createIssue = async (req: Request, res: Response) => {
   }
 };
 
+// ─── Get Single Issue ─────────────────────────────────────────────────────────
+const getSingleIssue = async (req: Request, res: Response) => {
+  // :id comes from URL — e.g. GET /api/issues/45
+  const id = parseInt(req.params.id);
+
+};
+
+
 export const issuController = {
   createIssue,
+  getSingleIssue
 };

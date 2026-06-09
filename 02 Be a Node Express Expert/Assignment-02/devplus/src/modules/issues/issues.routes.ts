@@ -5,5 +5,5 @@ import { authenticate } from "../../middleware/auth";
 const router = Router();
 
 router.post('/issues',authenticate, issuController.createIssue);
-// router.get('/:id',);
+router.get('/:id',); //public
 export const issuesRoute = router;

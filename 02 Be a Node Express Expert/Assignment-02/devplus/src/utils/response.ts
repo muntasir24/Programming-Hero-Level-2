@@ -1,4 +1,8 @@
 import type { Response } from "express";
+import { StatusCodes } from "http-status-codes";
+
+
+
 
 type SuccessResponse<T> = {
   success: true;
@@ -42,4 +46,15 @@ const sendError = (
   return res.status(statusCode).json(payload);
 };
 
-export { sendError, sendSuccess };
+// reusable error handler — same pattern everywhere
+const handleError = (res: Response, err: unknown): void => {
+  const error = err as { statusCode?: number; message?: string };
+  if (error.statusCode) {
+    sendError(res, error.statusCode, error.message ?? 'Something went wrong');
+  } else {
+    sendError(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error', err);
+  }
+};
+
+
+export { sendError, sendSuccess,handleError };
