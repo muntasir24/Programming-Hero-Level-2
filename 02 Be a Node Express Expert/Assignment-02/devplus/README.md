@@ -1,66 +1,63 @@
 # DevPulse
 
-Internal tech issue and feature tracker — a collaborative API for software teams to report bugs, suggest features, and coordinate resolutions.
+> Internal tech issue and feature tracker — a collaborative API for software teams to report bugs, suggest features, and coordinate resolutions.
 
-**Live URL:** `https://devplus-two.vercel.app/`
-
-**GitHub Repo:** `https://github.com/muntasir24/Programming-Hero-Level-2/tree/main/02%20Be%20a%20Node%20Express%20Expert/Assignment-02/devplus`
-
----
-
-## Features
-
-- JWT-based authentication with role-based access control (`contributor`, `maintainer`)
-- Create, view, update, and delete issues (bugs or feature requests)
-- Sort and filter issues by type, status, and creation date
-- Permission rules: contributors manage their own open issues, maintainers manage everything
-- Passwords hashed with bcrypt, never exposed in any response
+🔗 **Live URL:** [https://devplus-two.vercel.app/](https://devplus-two.vercel.app/)  
+💻 **GitHub Repo:** [View Repository](https://github.com/muntasir24/Programming-Hero-Level-2/tree/main/02%20Be%20a%20Node%20Express%20Expert/Assignment-02/devplus)  
 
 ---
 
-## Tech stack
+## ✨ Features
 
-| Technology | 
-|---|
-| Node.js (24.x) |
-| TypeScript | 
-| Express.js | 
-| PostgreSQL (`pg`) | 
-| bcrypt | 
-| jsonwebtoken | 
-| http-status-codes |
+- 🔐 **JWT-based authentication** with strict role-based access control (`contributor`, `maintainer`).
+- 📝 **Issue Management:** Create, view, update, and delete issues (bugs or feature requests).
+- 🔍 **Filtering & Sorting:** Fetch issues efficiently with sorting and filtering options (type, status, creation date).
+- 🛡️ **Role Permissions:** Contributors manage their own open issues; maintainers have universal access.
+- 🔒 **Security First:** Passwords securely hashed with `bcrypt` and never exposed in responses.
 
 ---
 
-## Project structure
+## 🛠️ Tech Stack
 
-```
+| Category | Technology |
+|---|---|
+| **Runtime** | Node.js (24.x) |
+| **Language** | TypeScript |
+| **Framework** | Express.js |
+| **Database** | PostgreSQL (`pg` native driver) |
+| **Security** | `bcrypt`, `jsonwebtoken` |
+| **Utilities** | `http-status-codes` |
+
+---
+
+## 📂 Project Structure
+
+```text
 src/
-├── config/          # database connection pool
-├── db/              # schema / setup queries
-├── middleware/      # auth, role guard, error handler
+├── config/          # Environment variables & database connection pool
+├── db/              # Schema queries & initialization
+├── middleware/      # Auth verification, role guards, error handler
 ├── modules/
-│   ├── auth/        # signup, login, refresh
-│   └── issues/      # create, read, update, delete issues
-├── types/           # shared TypeScript types
-├── utils/           # jwt helpers, response helpers
-├── app.ts           # Express app setup
-└── server.ts        # entry point
+│   ├── auth/        # Signup, login, refresh handlers
+│   └── issues/      # Create, read, update, delete issues
+├── types/           # Shared TypeScript interfaces
+├── utils/           # JWT utilities, standard API responses
+├── app.ts           # Express app configuration
+└── server.ts        # Application entry point
 ```
 
 ---
 
-## Setup
+## 🚀 Getting Started
 
-### 1. Clone and install
+### 1. Clone & Install
 ```bash
-git clone https://github.com/muntasir24/Programming-Hero-Level-2/tree/8e2714f2b3de5ea6fdd4084cc77281f4e1f0709c/02%20Be%20a%20Node%20Express%20Expert/Assignment-02/devplus
-cd devpulse
+git clone https://github.com/muntasir24/Programming-Hero-Level-2.git
+cd "02 Be a Node Express Expert/Assignment-02/devplus"
 npm install
 ```
 
-### 2. Environment variables
-
+### 2. Environment Variables
 Create a `.env` file in the project root:
 ```env
 DATABASE_URL=postgresql://user:password@host:port/dbname
@@ -69,39 +66,16 @@ JWT_REFRESH_SECRET=your_refresh_secret
 PORT=3000
 ```
 
-### 3. Create database tables
+### 3. Database Initialization
+The application will automatically initialize the required tables (`users` and `issues`) on startup. Ensure your PostgreSQL database is running and accessible via the `DATABASE_URL`.
 
-Run this against your PostgreSQL database:
-```sql
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL DEFAULT 'contributor' CHECK (role IN ('contributor', 'maintainer')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE issues (
-  id SERIAL PRIMARY KEY,
-  title VARCHAR(150) NOT NULL,
-  description TEXT NOT NULL,
-  type VARCHAR(20) NOT NULL CHECK (type IN ('bug', 'feature_request')),
-  status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved')),
-  reporter_id INTEGER NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-### 4. Run locally
+### 4. Run Locally
 ```bash
 npm run dev
 ```
-Server runs on `http://localhost:3000`.
+The server will start on `http://localhost:3000`.
 
-### 5. Build for production
+### 5. Build for Production
 ```bash
 npm run build
 npm start
@@ -109,98 +83,66 @@ npm start
 
 ---
 
-## Database schema summary
+## 🗄️ Database Schema
 
-### `users`
-
-| Field | Type | Notes |
+### `users` Table
+| Field | Type | Description |
 |---|---|---|
-| id | SERIAL | Primary key |
-| name | VARCHAR | Required |
-| email | VARCHAR | Unique, required |
-| password | VARCHAR | Hashed, never returned |
-| role | VARCHAR | `contributor` or `maintainer`, defaults to `contributor` |
-| created_at | TIMESTAMPTZ | Auto-generated |
-| updated_at | TIMESTAMPTZ | Auto-refreshed on update |
+| `id` | SERIAL (PK) | Unique identifier |
+| `name` | VARCHAR | Full display name |
+| `email` | VARCHAR | Unique login address |
+| `password` | VARCHAR | Encrypted string (hashed) |
+| `role` | VARCHAR | `contributor` (default) or `maintainer` |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
 
-### `issues`
-
-| Field | Type | Notes |
+### `issues` Table
+| Field | Type | Description |
 |---|---|---|
-| id | SERIAL | Primary key |
-| title | VARCHAR(150) | Required |
-| description | TEXT | Required, min 20 characters |
-| type | VARCHAR | `bug` or `feature_request` |
-| status | VARCHAR | `open`, `in_progress`, or `resolved` — defaults to `open` |
-| reporter_id | INTEGER | References `users.id`, validated in application logic |
-| created_at | TIMESTAMPTZ | Auto-generated |
-| updated_at | TIMESTAMPTZ | Auto-refreshed on update |
+| `id` | SERIAL (PK) | Unique identifier |
+| `title` | VARCHAR(150) | Issue headline |
+| `description` | TEXT | Detailed explanation (min 20 chars) |
+| `type` | VARCHAR | `bug` or `feature_request` |
+| `status` | VARCHAR | `open` (default), `in_progress`, or `resolved` |
+| `reporter_id` | INTEGER | References `users.id` |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
 
 ---
 
-## API endpoints
+## 🌐 API Endpoints
 
-### Authentication
-
+### 🔐 Authentication (`/api/auth`)
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/api/auth/signup` | Public | Register a new user |
-| POST | `/api/auth/login` | Public | Authenticate and receive JWT |
-| POST | `/api/auth/refresh` | Public | Refresh an expired access token |
+| `POST` | `/signup` | Public | Register a new user account |
+| `POST` | `/login` | Public | Authenticate and receive tokens |
+| `POST` | `/refresh` | Public | Refresh expired access token via cookie |
 
-### Issues
-
+### 📝 Issues (`/api/issues`)
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/api/issues` | Authenticated | Create a new issue |
-| GET | `/api/issues` | Public | List all issues — supports `sort`, `type`, `status` filters |
-| GET | `/api/issues/:id` | Public | Get a single issue with reporter details |
-| PATCH | `/api/issues/:id` | Maintainer (any) / Contributor (own, open only) | Update an issue |
-| DELETE | `/api/issues/:id` | Maintainer only | Delete an issue |
+| `POST` | `/` | Authenticated | Create a new issue |
+| `GET` | `/?sort&type&status` | Public | List all issues with optional filters |
+| `GET` | `/:id` | Public | Retrieve a specific issue |
+| `PATCH` | `/:id` | Maintainer / Contributor (own, open) | Update an issue |
+| `DELETE` | `/:id` | Maintainer Only | Remove an issue |
 
 ---
 
-## Authentication flow
+## ⚙️ Core Workflows
 
-1. Client sends credentials to `/api/auth/login`
-2. Server verifies password with bcrypt and signs a JWT containing `id`, `name`, and `role`
-3. Client attaches the token to subsequent requests: `Authorization: <token>`
-4. Server verifies the token's signature and expiry before processing protected routes
-5. Role checks (`maintainer`-only actions) happen after authentication, before the operation runs
+**Authentication Flow:**
+1. Client sends credentials to `POST /api/auth/login`.
+2. Server validates password and returns a signed JWT.
+3. Client attaches token via `Authorization: <token>` header.
+4. Server validates signature before accessing protected routes.
 
----
-
-## Response format
-
-**Success**
+**Standard API Response:**
 ```json
 {
   "success": true,
   "message": "Operation description",
-  "data": {}
+  "data": { }
 }
 ```
-
-**Error**
-```json
-{
-  "success": false,
-  "message": "Error description",
-  "errors": {}
-}
-```
-
----
-
-## Status codes
-
-| Code | Meaning |
-|---|---|
-| 200 | Successful GET, PATCH, DELETE |
-| 201 | Successful POST |
-| 400 | Validation error or duplicate resource |
-| 401 | Missing, expired, or invalid token |
-| 403 | Valid token, insufficient permissions |
-| 404 | Resource not found |
-| 409 | Business logic conflict (e.g. editing a resolved issue) |
-| 500 | Internal server error |
