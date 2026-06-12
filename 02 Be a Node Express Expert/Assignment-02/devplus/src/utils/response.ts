@@ -1,13 +1,10 @@
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
-
-
-
 type SuccessResponse<T> = {
   success: true;
   message: string;
-  data: T;
+  data?: T;
 };
 
 type ErrorResponse = {
@@ -16,16 +13,16 @@ type ErrorResponse = {
   errors?: unknown;
 };
 
-const sendSuccess = <T>(
+const sendSuccess = <T = undefined>(
   res: Response,
   statusCode: number,
   message: string,
-  data: T,
+  data?: T,
 ) => {
   const payload: SuccessResponse<T> = {
     success: true,
     message,
-    data,
+    ...(data !== undefined && { data }),
   };
 
   return res.status(statusCode).json(payload);
@@ -50,11 +47,15 @@ const sendError = (
 const handleError = (res: Response, err: unknown): void => {
   const error = err as { statusCode?: number; message?: string };
   if (error.statusCode) {
-    sendError(res, error.statusCode, error.message ?? 'Something went wrong');
+    sendError(res, error.statusCode, error.message ?? "Something went wrong");
   } else {
-    sendError(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error', err);
+    sendError(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "Internal server error",
+      err,
+    );
   }
 };
 
-
-export { sendError, sendSuccess,handleError };
+export { handleError, sendError, sendSuccess };

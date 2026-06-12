@@ -10,9 +10,10 @@ pool.on("error", (err, client) => {
 });
 
 const initDB = async () => {
+  let client;
   try {
-    await pool.connect();
-    await pool.query(`
+    client = await pool.connect();
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -23,7 +24,7 @@ const initDB = async () => {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
-    await pool.query(`
+    await client.query(`
       CREATE TABLE  IF NOT EXISTS issues (
   id SERIAL PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
@@ -38,6 +39,10 @@ const initDB = async () => {
     console.log("Connected to DB");
   } catch (err) {
     console.log("Error connecting to the database:", err);
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 };
 

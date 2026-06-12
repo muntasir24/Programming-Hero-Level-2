@@ -26,3 +26,10 @@ export interface IssueWithReporter {
   created_at: Date;
   updated_at: Date;
 }
+
+// add this to your existing types file
+export interface GetAllIssuesQuery {
+  sort?: "newest" | "oldest";
+  type?: "bug" | "feature_request";
+  status?: "open" | "in_progress" | "resolved";
+}
