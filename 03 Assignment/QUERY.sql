@@ -36,7 +36,7 @@ CREATE TABLE Matches (
     match_id serial primary key,
     fixture varchar(50),
     tournament_category varchar(50),
-    base_ticket_price smallint,
+    base_ticket_price  decimal(10,2),
     match_status varchar(50),
   check(base_ticket_price>0),
  CHECK (match_status IN ('Available', 'Selling Fast', 'Sold Out', 'Postponed'))
