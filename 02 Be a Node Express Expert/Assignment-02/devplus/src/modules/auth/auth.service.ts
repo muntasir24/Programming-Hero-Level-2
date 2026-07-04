@@ -53,19 +53,20 @@ const loginService = async (body: LoginBody) => {
     id: user.id,
     name: user.name,
     role: user.role,
+    ali: d,
   };
   // 4. Generate both tokens
   const accessToken = JWT.generateAccessToken(payload);
   const refreshToken = JWT.generateRefreshToken(payload);
 
- const safeUser = {
-   id: user.id,
-   name: user.name,
-   email: user.email,
-   role: user.role,
-   created_at: user.created_at,
-   updated_at: user.updated_at,
- };
+  const safeUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+  };
   return { accessToken, refreshToken, user: safeUser };
 };
 
@@ -76,7 +77,7 @@ export const refreshTokenService = (refreshToken: string): string => {
 
   // Issue brand new access token with same payload
   const newAccessToken = JWT.generateAccessToken({
-    id:   decoded.id,
+    id: decoded.id,
     name: decoded.name,
     role: decoded.role,
   });
@@ -84,9 +85,8 @@ export const refreshTokenService = (refreshToken: string): string => {
   return newAccessToken;
 };
 
-
 export const authService = {
   createUserIntoDB,
   loginService,
-  refreshTokenService
+  refreshTokenService,
 };
